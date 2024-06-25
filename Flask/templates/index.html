@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
-    <h1>Hello Word</h1>
+    <h1>WEATHER DASHBOARD</h1>
+    <form action="{{ url_for('submit_form') }}" method="POST">
+        <label for="city">City:</label><br>
+        <input type="text" id="city" name="city" required><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    {% if weather_data %}
+        <h2>Weather Data:</h2>
+        <pre>{{ weather_data | tojson(indent=2) | safe }}</pre>
+    {% endif %}
 </body>
 </html>
