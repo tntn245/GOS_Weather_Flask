@@ -1,5 +1,7 @@
 from flask import Flask, json, render_template, url_for, request, redirect, jsonify
 from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 import datetime as dt
 import requests
 import config as cfg
@@ -10,9 +12,9 @@ load_dotenv()
 
 app = Flask(__name__)
 app. config ['MAIL_SERVER'] = 'smtp.gmail.com'
-app. config ['MAIL_PORT'] = 465
-app. config ['MAIL_USERNAME'] = '21520385@gm.uit.edu.vn'
-app. config ['MAIL_PASSWORD'] = os.environ.get('PASSWORD')
+app. config ['MAIL_PORT'] = 587
+app. config ['MAIL_USERNAME'] = 'tranngoctonhu2405@gmail.com'
+app. config ['MAIL_PASSWORD'] = 'rkkasigyemmqvmbr'
 app.config ['MAIL_USE_TLS'] = False
 app.config ['MAIL_USE_SSL'] = True
 mail = Mail(app)
@@ -37,14 +39,31 @@ def submit_form():
     
     return render_template("index.html", weather_data=weather_data)
 
+# def send_daily_email():
+#     with app.app_context():
+#         msg = Message(
+#             "Daily Email",
+#             sender=cfg.EMAIL_USER,
+#             recipients=["recipient@example.com"]
+#         )
+#         msg.body = "This is your daily email!"
+#         mail.send(msg)
+
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(func=send_daily_email, trigger="interval", days=1)
+# scheduler.start()
+
+# # Shut down the scheduler when exiting the app
+# atexit.register(lambda: scheduler.shutdown())
+
 @app.route('/sendemail', methods=['GET', 'POST'])
-def home():
+def sendemail():
     if request.method == 'POST':
-        msg = Message("Hey", sender='noreply@demo.com',
-        recipients=['tranngoctonhu2405@gmail.com'])
+        msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
+            recipients=['tranngoctonhu245@gmail.com'])
         msg.body = "Hey how are you? Is everything okay?"
         mail.send(msg)
-        return "Sent email."
+        return "Success"
     return render_template('sendemail.html')
 
 
