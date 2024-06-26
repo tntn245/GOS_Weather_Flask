@@ -2,6 +2,7 @@ python-dotenv
 flask-mail
 APScheduler
 schedule
-celery redis
+celery 
+redis
 waitress
 gunicorn
