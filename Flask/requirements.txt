@@ -1,7 +1,0 @@
-python-dotenv
-flask-mail
-Flask-Mail APScheduler
-schedule
-celery redis
-waitress
-gunicorn
