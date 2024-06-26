@@ -1,17 +1,12 @@
-from flask import Flask, json, render_template, url_for, request, redirect, flash
+from flask import Flask, render_template, url_for, request
 from flask_mail import Mail, Message
-# from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 import atexit
 import datetime as dt
 import requests
 import config as cfg
 import os
-from datetime import datetime
-import time
-import schedule
-import threading
-import helper
 
 load_dotenv()
 
@@ -26,17 +21,16 @@ mail = Mail(app)
 
 def send_daily_email():
     with app.app_context():
-        msg = Message("Hey", sender = "tranngoctonhu2405@gmail.com",
-            recipients = ["tranngoctonhu245@gmail.com"])
-        msg.body = "Hey how are you? Is everything okay?"
+        msg = Message("Daily Weather Update",
+                      sender="tranngoctonhu2405@gmail.com",
+                      recipients=["tranngoctonhu245@gmail.com"])
+        msg.body = "Hey how are you? Here's your daily weather update!"
         mail.send(msg)
 
-def schedule_emails():
-    # schedule.every().day.at("07:00").do(send_daily_email)
-    schedule.every(10).seconds.do(send_daily_email)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+scheduler = BackgroundScheduler()
+# scheduler.add_job(send_daily_email, 'cron', hour=7, minute=0)
+scheduler.add_job(send_daily_email, 'interval', seconds=10)
+scheduler.start()
 
 @app.route('/')
 def index():
@@ -74,8 +68,4 @@ def sendemail():
 
 
 if __name__ == "__main__":
-    scheduler_thread = threading.Thread(target=schedule_emails)
-    scheduler_thread.daemon = True  
-    scheduler_thread.start()
-
     app.run(debug=True)
