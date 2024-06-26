@@ -1,12 +1,17 @@
-from flask import Flask, json, render_template, url_for, request, redirect, jsonify
+from flask import Flask, json, render_template, url_for, request, redirect, flash
 from flask_mail import Mail, Message
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 import atexit
 import datetime as dt
 import requests
 import config as cfg
 import os
-from dotenv import load_dotenv
+from datetime import datetime
+import time
+import schedule
+import threading
+import helper
 
 load_dotenv()
 
@@ -18,6 +23,20 @@ app. config ['MAIL_PASSWORD'] = 'rkkasigyemmqvmbr'
 app.config ['MAIL_USE_TLS'] = False
 app.config ['MAIL_USE_SSL'] = True
 mail = Mail(app)
+
+def send_periodic_email():
+    msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
+            recipients=['tranngoctonhu245@gmail.com'])
+    msg.body = "Hey how are you? Is everything okay?"
+    mail.send(msg)
+
+def schedule_emails():
+    # schedule.every().day.at("09:00").do(send_periodic_email)  # Schedule to run daily at 9 AM
+    schedule.every(10).seconds.do(send_periodic_email)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 
 @app.route('/')
 def index():
@@ -39,22 +58,25 @@ def submit_form():
     
     return render_template("index.html", weather_data=weather_data)
 
-# def send_daily_email():
-#     with app.app_context():
-#         msg = Message(
-#             "Daily Email",
-#             sender=cfg.EMAIL_USER,
-#             recipients=["recipient@example.com"]
-#         )
-#         msg.body = "This is your daily email!"
+
+
+# @app.route('/sendemail', methods=['GET', 'POST'])
+# def sendemail():
+#     if request.method == 'POST':
+#         msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
+#             recipients=['tranngoctonhu245@gmail.com'])
+#         msg.body = "Hey how are you? Is everything okay?"
 #         mail.send(msg)
+#         return "Success"
+#     return render_template('sendemail.html')
 
-# scheduler = BackgroundScheduler()
-# scheduler.add_job(func=send_daily_email, trigger="interval", days=1)
-# scheduler.start()
-
-# # Shut down the scheduler when exiting the app
-# atexit.register(lambda: scheduler.shutdown())
+# @app.rout('/schedule', methods=['GET', 'POST'])
+# def schedule():
+#     current_time = datetime.now()
+#     schedule.every(5).seconds.do(print(current_time))
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(1)
 
 @app.route('/sendemail', methods=['GET', 'POST'])
 def sendemail():
@@ -68,5 +90,9 @@ def sendemail():
 
 
 if __name__ == "__main__":
+    scheduler_thread = threading.Thread(target=schedule_emails)
+    scheduler_thread.daemon = True
+    scheduler_thread.start()
+
     app.run(debug=True)
     
