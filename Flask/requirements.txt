@@ -1,0 +1,8 @@
+pip install python-dotenv
+pip install flask-mail
+pip install Flask-Mail APScheduler
+pip install schedule
+pip install celery redis
+pip install waitress
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
