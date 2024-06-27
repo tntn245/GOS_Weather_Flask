@@ -13,6 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 import random
 import string
+import bcrypt
 
 load_dotenv()
 
@@ -32,10 +33,19 @@ mail = Mail(app)
 CORS(app) 
 
 
-class User(db.Model, UserMixin):
-    email = db.Column(db.String(20), nullable=False, primary_key=True)
-    password = db.Column(db.String(80), nullable=False)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
 
+    def __repr__(self):
+        return '<User %r>' % self.email
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash)
 
 def send_daily_email():
     with app.app_context():
@@ -52,6 +62,11 @@ scheduler.start()
 
 def generate_otp(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+@app.route('/')
+def index():
+    weather_data = request.args.get('weather_data')
+    return render_template("index.html", weather_data=weather_data)
 
 @app.route('/checkEmail', methods=['POST'])
 def checkEmail():
@@ -82,17 +97,28 @@ def register():
     OTPInput = data.get('OTPInput')
 
     if(OTPInput==OTPSent):
-        new_user = User(email=email, password=password)
+        new_user = User(email=email)
+        new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
         return jsonify({'message': 'Verify successfully!'})
     
     return jsonify({'message': 'Verify failed!'}), 400
 
-@app.route('/')
-def index():
-    weather_data = request.args.get('weather_data')
-    return render_template("index.html", weather_data=weather_data)
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    # Tìm kiếm và kiểm tra trong cơ sở dữ liệu
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not user.check_password(password):
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+    return jsonify({'message': 'Login successful'}), 200
+
 
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
