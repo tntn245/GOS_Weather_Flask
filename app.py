@@ -33,8 +33,7 @@ CORS(app)
 
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(20), nullable=False, unique=True)
+    email = db.Column(db.String(20), nullable=False, primary_key=True)
     password = db.Column(db.String(80), nullable=False)
 
 
@@ -54,8 +53,8 @@ scheduler.start()
 def generate_otp(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
-@app.route('/register', methods=['POST'])
-def register():
+@app.route('/checkEmail', methods=['POST'])
+def checkEmail():
     data = request.get_json()
     email = data.get('email')
 
@@ -71,13 +70,24 @@ def register():
     msg.body = f'Your OTP code is {otp}'
     mail.send(msg)
 
-    new_user = User(email=email)
-    db.session.add(new_user)
-    db.session.commit()
-
-    return jsonify({'message': 'OTP sent to your email!'})
+    return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
 
 
+@app.route('/verifyOTP', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    OTPSent = data.get('OTPSent')
+    OTPInput = data.get('OTPInput')
+
+    if(OTPInput==OTPSent):
+        new_user = User(email=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'Verify successfully!'})
+    
+    return jsonify({'message': 'Verify failed!'}), 400
 
 @app.route('/')
 def index():
