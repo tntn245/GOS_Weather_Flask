@@ -53,7 +53,15 @@ class User(db.Model):
 
     def check_password(self, password):
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash)
+    
+class UserSubscribe(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    position = db.Column(db.String(255), nullable=False)
 
+    def __repr__(self):
+        return f'<UserPosition user_id={self.user_id} position={self.position}>'
+    
 def send_daily_email():
     with app.app_context():
         msg = Message("Daily Weather Update",
@@ -124,7 +132,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    access_token = create_access_token(identity=email)
+    access_token = create_access_token(identity=user.id)
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
 
 
@@ -153,15 +161,26 @@ def submit_form():
         
     return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
 
-# @app.route('/sendemail', methods=['GET', 'POST'])
-# def sendemail():
-#     if request.method == 'POST':
-#         msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
-#             recipients=['tranngoctonhu245@gmail.com'])
-#         msg.body = "Hey how are you? Is everything okay?"
-#         mail.send(msg)
-#         return "Success"
-#     return render_template('sendemail.html')
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    data = request.json
+    position = data.get('position')
+    userID = data.get('userID')
+
+    if not position:
+        return jsonify({'message': 'Position is required'}), 400
+
+    # Kiểm tra tồn tại user_id và position
+    existing_position = UserSubscribe.query.filter_by(user_id=userID, position=position).first()
+
+    if existing_position:
+        return jsonify({'message': 'Position already subscribed'}), 400
+
+    new_position = UserSubscribe(user_id=userID, position=position)
+    db.session.add(new_position)
+    db.session.commit()
+
+    return jsonify({'message': 'Subscription successful', 'userID':userID}), 200
 
 @app.route('/google-login', methods=['POST'])
 def google_login():
