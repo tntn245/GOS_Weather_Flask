@@ -4,19 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
-    <h1>WEATHER DASHBOARD</h1>
-    <form action="{{ url_for('submit_form') }}" method="POST">
-        <label for="city">City:</label><br>
-        <input type="text" id="city" name="city" required><br><br>
-        <input type="submit" value="Submit">
-    </form>
-
-    {% if weather_data %}
-        <h2>Weather Data:</h2>
-        <pre>{{ weather_data | tojson(indent=2) | safe }}</pre>
-    {% endif %}
+    <div>
+        <header class="header">Weather Dashboard</header>
+        <div class="content">
+          <div class="left-side">
+            <div class="input-container">
+              <p>Enter a City Name</p>
+                <form action="{{ url_for('submit_form') }}" method="POST">
+                    <input type="text" id="city" name="city" required><br><br>
+                    <input type="submit" value="Search">
+                </form>
+            </div>
+            <div class="divider">
+              <span class="divider-text">or</span>
+            </div>
+            <button class="curr-button">Use current location</button>
+          </div>
+  
+          <div class="right-side">
+            <div class="info-box">
+                {% if weather_data %}
+                  <h3>{{ weather_data['location']['country'] }}</h3>
+                  <p>Temperature: {{ weather_data['current']['temp_c'] }} &#8451;</p>
+                  <p>Wind speed: {{ weather_data['current']['wind_kmph'] }} KM/H/</p>
+                  <p>Humidity: {{ weather_data['current']['humidity'] }} %</p>
+                  <!-- <p>{{ weather_data['condition']['text'] }} %</p> -->
+                {% endif %}
+            </div>
+            <div class="days-label">4 Day Forecast</div>
+            <div class="four-columns">
+              <div class="column-box"></div>
+              <div class="column-box"></div>
+              <div class="column-box"></div>
+              <div class="column-box"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 </body>
 </html>
