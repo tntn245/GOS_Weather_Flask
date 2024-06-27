@@ -1,16 +1,18 @@
-from flask import Flask, render_template, url_for, request, jsonify
+from flask import Flask, render_template, url_for, request, jsonify, session
 from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-import datetime as dt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timedelta
+from functools import wraps
+
 import requests
 import config as cfg
 import os
-from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
 import random
 import string
 import bcrypt
@@ -30,6 +32,11 @@ app.config['MAIL_PASSWORD'] = os.getenv('PASSWORD')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
+
+app.config['JWT_SECRET_KEY'] = '26432b2e093f44a8afb67de48f77fe6b'  
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
+jwt = JWTManager(app)
+
 CORS(app) 
 
 
@@ -117,7 +124,8 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    return jsonify({'message': 'Login successful'}), 200
+    access_token = create_access_token(identity=email)
+    return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
 
 
 @app.route('/submit_form', methods=['POST'])
@@ -145,18 +153,15 @@ def submit_form():
         
     return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
 
-
-
-
-@app.route('/sendemail', methods=['GET', 'POST'])
-def sendemail():
-    if request.method == 'POST':
-        msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
-            recipients=['tranngoctonhu245@gmail.com'])
-        msg.body = "Hey how are you? Is everything okay?"
-        mail.send(msg)
-        return "Success"
-    return render_template('sendemail.html')
+# @app.route('/sendemail', methods=['GET', 'POST'])
+# def sendemail():
+#     if request.method == 'POST':
+#         msg = Message("Hey", sender='tranngoctonhu2405@gmail.com',
+#             recipients=['tranngoctonhu245@gmail.com'])
+#         msg.body = "Hey how are you? Is everything okay?"
+#         mail.send(msg)
+#         return "Success"
+#     return render_template('sendemail.html')
 
 @app.route('/google-login', methods=['POST'])
 def google_login():
@@ -165,10 +170,14 @@ def google_login():
         id_info = id_token.verify_oauth2_token(token, google_requests.Request())
         if id_info['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
-        email = id_info.get('email')
-        return {'email': email}, 200
-    except ValueError as e:
-        return {'error': 'Invalid token'}, 401
 
+        email = id_info.get('email')
+
+        # Tạo JWT
+        access_token = create_access_token(identity=email)
+
+        return jsonify(access_token=access_token), 200
+    except ValueError as e:
+        return jsonify({'error': 'Invalid token'}), 401
 if __name__ == "__main__":
     app.run(debug=True)
