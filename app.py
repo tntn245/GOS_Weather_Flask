@@ -8,10 +8,20 @@ import datetime as dt
 import requests
 import config as cfg
 import os
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+import random
+import string
 
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/GOS/GOS_Flask/instance/database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = '123456789'
+db = SQLAlchemy(app)
+
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = "tranngoctonhu2405@gmail.com"
@@ -19,6 +29,14 @@ app.config['MAIL_PASSWORD'] = os.getenv('PASSWORD')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
+CORS(app) 
+
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(20), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=False)
+
 
 def send_daily_email():
     with app.app_context():
@@ -33,6 +51,34 @@ scheduler.add_job(send_daily_email, 'cron', hour=7, minute=0)
 # scheduler.add_job(send_daily_email, 'interval', seconds=10)
 scheduler.start()
 
+def generate_otp(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'message': 'Email is required!'}), 400
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'message': 'Email already exists!'}), 400
+
+    otp = generate_otp()
+    msg = Message('Your OTP Code', sender='tranngoctonhu2405@gmail.com', recipients=[email])
+    msg.body = f'Your OTP code is {otp}'
+    mail.send(msg)
+
+    new_user = User(email=email)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'OTP sent to your email!'})
+
+
+
 @app.route('/')
 def index():
     weather_data = request.args.get('weather_data')
@@ -40,23 +86,31 @@ def index():
 
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
-    # city = request.form['city']
-    # current = 'current.json'
-    # forecast = 'forecast.json'
+    data = request.json
+    city = data.get('city')
+    current = 'current.json'
+    forecast = 'forecast.json'
 
-    # url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={city}&aqi=no"
-    # response = requests.get(url)
-
-    # url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={city}&days=4&aqi=no&alerts=yes"
-    url = "http://api.weatherapi.com/v1/current.json?key=3754d6efcabd4f4892d44831242706&q=London&aqi=no"
+    url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={city}&aqi=no"
     response = requests.get(url)
     
     if response.status_code == 200:
         weather_data = response.json()
     else:
         weather_data = {"error": "Could not retrieve data"}
+
+    url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={city}&days=5&aqi=no&alerts=yes"
+    response = requests.get(url)
     
-    return render_template("index.html", weather_data=weather_data)
+    if response.status_code == 200:
+        forecast_data = response.json()
+    else:
+        forecast_data = {"error": "Could not retrieve data"}
+        
+    return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
+
+
+
 
 @app.route('/sendemail', methods=['GET', 'POST'])
 def sendemail():

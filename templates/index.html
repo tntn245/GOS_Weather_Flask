@@ -1,48 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dashboard.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+
+    <script>
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+          document.getElementById("curr-location-alert").innerHTML =
+            "Geolocation is not supported by this browser.";
+        }
+      }
+
+      function showPosition(position) {
+        const position =
+          position.coords.latitude + "," + position.coords.longitude;
+
+        fetch("/submit_form", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ position: position }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Response from Flask:", data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    </script>
+  </head>
+  <body>
     <div>
-        <header class="header">Weather Dashboard</header>
-        <div class="content">
-          <div class="left-side">
-            <div class="input-container">
-              <p>Enter a City Name</p>
-                <form action="{{ url_for('submit_form') }}" method="POST">
-                    <input type="text" id="city" name="city" required><br><br>
-                    <input type="submit" value="Search">
-                </form>
-            </div>
-            <div class="divider">
-              <span class="divider-text">or</span>
-            </div>
-            <button class="curr-button">Use current location</button>
+      <header class="header">Weather Dashboard</header>
+      <div class="content">
+        <div class="left-side">
+          <div class="input-container">
+            <p>Enter a City Name</p>
+            <form action="{{ url_for('submit_form') }}" method="POST">
+              <input type="text" id="city" name="city" required /><br /><br />
+              <input type="submit" value="Search" />
+            </form>
           </div>
-  
-          <div class="right-side">
+          <div class="divider">
+            <span class="divider-text">or</span>
+          </div>
+          <button class="curr-button" onclick="getLocation()">
+            Use current location
+          </button>
+          <p id="curr-location-alert"></p>
+        </div>
+
+        <div class="right-side">
+          <div class="info-container">
             <div class="info-box">
-                {% if weather_data %}
-                  <h3>{{ weather_data['location']['country'] }}</h3>
-                  <p>Temperature: {{ weather_data['current']['temp_c'] }} &#8451;</p>
-                  <p>Wind speed: {{ weather_data['current']['wind_kmph'] }} KM/H/</p>
-                  <p>Humidity: {{ weather_data['current']['humidity'] }} %</p>
-                  <!-- <p>{{ weather_data['condition']['text'] }} %</p> -->
-                {% endif %}
+              <h3>
+                {{ weather_data['location']['country'] if weather_data else
+                "Country" }}
+              </h3>
+              <p>
+                Temperature: {{ weather_data['current']['temp_c'] if
+                weather_data else "---" }} &#8451;
+              </p>
+              <p>
+                Wind speed: {{ weather_data['current']['wind_kph'] if
+                weather_data else "---" }} KM/H
+              </p>
+              <p>
+                Humidity: {{ weather_data['current']['humidity'] if weather_data
+                else "---" }} %
+              </p>
             </div>
-            <div class="days-label">4 Day Forecast</div>
-            <div class="four-columns">
-              <div class="column-box"></div>
-              <div class="column-box"></div>
-              <div class="column-box"></div>
-              <div class="column-box"></div>
+            <div class="additional-info">
+              <p>
+                {{ weather_data['current']['condition']['text'] if weather_data
+                else "Additional Information" }}
+              </p>
             </div>
+          </div>
+
+          <div class="days-label">4 Day Forecast</div>
+          <div class="four-columns">
+            {% if forecast_data and forecast_data.forecast.forecastday %} {% for
+            day in forecast_data.forecast.forecastday[1:] %}
+            <div class="forecast-day">
+              <div class="column-box">
+                <h4>( {{ day.date }} )</h4>
+                <p>{{ day.day.condition.text }}</p>
+                <p>Temp: {{ day.day.avgtemp_c }} &#8451;</p>
+                <p>Max Wind: {{ day.day.maxwind_kph }} KM/H</p>
+                <p>Humidity: {{ day.day.avghumidity }} %</p>
+              </div>
+            </div>
+            {% endfor %} {% endif %}
           </div>
         </div>
       </div>
-</body>
+    </div>
+  </body>
 </html>

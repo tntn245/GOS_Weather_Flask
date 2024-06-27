@@ -53,7 +53,8 @@ body {
     text-align: left;
   }
   
-  .input-container input {
+  .input-container input[type="text"] {
+    background-color: #fff;
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
@@ -62,7 +63,7 @@ body {
     box-sizing: border-box; 
   }
   
-  .input-container button {
+  .input-container input[type="submit"] {
     width: 100%;
     padding: 10px;
     background-color: #5372F0;
@@ -73,6 +74,10 @@ body {
     box-sizing: border-box; 
   }
   
+  .input-container input[type="submit"]:hover {
+    background-color: #3b5bb5; 
+  }
+
   .divider {
     width: 100%;
     display: flex;
@@ -111,14 +116,38 @@ body {
     gap: 10px;
   }
   
-  .info-box {
+  .info-container {
     background-color: #5372F0;
     color: white;
     padding: 10px;
     border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
     height: 150px; 
   }
   
+  .info-box {
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  .info-box h3 {
+    margin: 0;
+  }
+  
+  .additional-info {
+    color: white;
+    border-radius: 4px;
+    flex: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
   .days-label {
     text-align: center;
     font-size: 20px;
@@ -134,8 +163,10 @@ body {
   }
   
   .column-box {
+    color: white;
     background-color: #6C757D; 
     border-radius: 4px;
     height: 200px; 
+    padding: 10px;
   }
   

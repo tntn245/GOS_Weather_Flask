@@ -10,3 +10,6 @@ gunicorn
 Flask-Dance
 google-auth
 flask-cors
+SQLAlchemy
+Flask-SQLAlchemy
+Flask-Login
