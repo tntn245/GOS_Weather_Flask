@@ -36,7 +36,7 @@ app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
 
 app.config['JWT_SECRET_KEY'] = '26432b2e093f44a8afb67de48f77fe6b'  
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 jwt = JWTManager(app)
 
 CORS(app) 
