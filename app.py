@@ -20,7 +20,7 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app, resources={r"/*": {"origins": "*"}})
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/GOS/GOS_Flask/instance/database.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -170,7 +170,7 @@ def submit_form():
         if response.status_code == 200:
             weather_data = response.json()
         else:
-            return jsonify({"error": "Could not retrieve data"}), 400
+            return jsonify({"error": "Could not retrieve current data"}), 400
 
         # Get forecast weather
         url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
@@ -179,7 +179,7 @@ def submit_form():
         if response.status_code == 200:
             forecast_data = response.json()
         else:
-            return jsonify({"error": "Could not retrieve data"}), 400
+            return jsonify({"error": "Could not retrieve forecast data"}), 400
 
         # Return result            
         return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
