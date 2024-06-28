@@ -166,7 +166,7 @@ def submit_form():
         forecast = 'forecast.json'
 
         # Get curr weather
-        url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
+        url = "http://api.weatherapi.com/v1/current.json?key=3754d6efcabd4f4892d44831242706&q=london&aqi=no"
         response = requests.get(url)
         
         if response.status_code == 200:
