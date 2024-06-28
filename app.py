@@ -219,7 +219,7 @@ def google_login():
         return jsonify({'error': 'Invalid token'}), 401
     
 @app.route('/test', methods=['POST'])
-def submit_form():
+def test():
     if request.is_json:
         data = request.get_json()
         # Xử lý dữ liệu của bạn ở đây
