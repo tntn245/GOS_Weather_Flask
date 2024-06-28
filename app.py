@@ -194,19 +194,32 @@ def subscribe():
 
     return jsonify({'message': 'Subscription successful', 'userID':userID}), 200
 
+@app.route('/loadUserSub', methods=['POST'])
+def load_user_subscriptions():
+    data = request.get_json()
+    userID = data.get('userID')
+
+    if userID is None:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    user_subscriptions = UserSubscribe.query.filter_by(user_id=userID).all()
+    positions = [sub.position for sub in user_subscriptions]
+
+    return jsonify({'positions': positions}), 200
+
 @app.route('/unsubscribe', methods=['POST'])
 def unsubscribe():
     data = request.json
     position = data.get('position')
-    user_id = data.get('userID')
+    userID = data.get('userID')
 
     # Check user_id & position
-    if not position or not user_id:
+    if not position or not userID:
         return jsonify({"error": "Missing position or userID"}), 400
 
     # Delete record in UserSubscribe
     try:
-        subscription = UserSubscribe.query.filter_by(user_id=user_id, position=position).first()
+        subscription = UserSubscribe.query.filter_by(user_id=userID, position=position).first()
 
         if subscription:
             db.session.delete(subscription)
