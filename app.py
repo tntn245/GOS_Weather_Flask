@@ -46,7 +46,7 @@ CORS(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.LargeBinary, nullable=False)  # Sử dụng LargeBinary để lưu trữ hash mật khẩu
+    password_hash = db.Column(db.LargeBinary, nullable=False)  # Use LargeBinary to hash pw
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -65,19 +65,6 @@ class UserSubscribe(db.Model):
     def __repr__(self):
         return f'<UserSubscribe user_id={self.user_id} position={self.position}>'
     
-
-
-
-
-
-# def send_daily_email():
-#     with app.app_context():
-#         msg = Message("Daily Weather Update",
-#                       sender="tranngoctonhu2405@gmail.com",
-#                       recipients=["tranngoctonhu245@gmail.com"])
-#         msg.body = "Hey how are you? Here's your daily weather update!"
-#         mail.send(msg)
-
 def send_daily_email():
     with app.app_context():
         users = User.query.all()
@@ -92,8 +79,8 @@ def send_daily_email():
                 mail.send(msg)
 
 scheduler = BackgroundScheduler()
-# scheduler.add_job(send_daily_email, 'cron', hour=7, minute=0)
-scheduler.add_job(send_daily_email, 'interval', seconds=60)
+scheduler.add_job(send_daily_email, 'cron', hour=11, minute=30)
+# scheduler.add_job(send_daily_email, 'interval', seconds=60)
 scheduler.start()
 
 def generate_otp(length=6):
@@ -147,7 +134,7 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    # Tìm kiếm và kiểm tra trong cơ sở dữ liệu
+    # Check email existed
     user = User.query.filter_by(email=email).first()
 
     if not user or not user.check_password(password):
@@ -159,35 +146,32 @@ def login():
 
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
-    if request.is_json:
-        data = request.get_json()
-        position = data.get('position')
-        current = 'current.json'
-        forecast = 'forecast.json'
+    data = request.json
+    position = data.get('position')
+    current = 'current.json'
+    forecast = 'forecast.json'
 
-        # Get curr weather
-        url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            weather_data = response.json()
-        else:
-            return jsonify({"error": "Could not retrieve current data"}), 400
-
-        # Get forecast weather
-        url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            forecast_data = response.json()
-        else:
-            return jsonify({"error": "Could not retrieve forecast data"}), 400
-
-        # Return result            
-        return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
+    # Get curr weather
+    url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
+    response = requests.get(url)
     
+    if response.status_code == 200:
+        weather_data = response.json()
     else:
-        return jsonify({"error": "Request must be JSON"}), 415
+        return jsonify({"error": "Could not retrieve current data"}), 400
+
+    # Get forecast weather
+    url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        forecast_data = response.json()
+    else:
+        return jsonify({"error": "Could not retrieve forecast data"}), 400
+
+    # Return result            
+    return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
+    
 
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
@@ -198,7 +182,7 @@ def subscribe():
     if not position:
         return jsonify({'message': 'Position is required'}), 400
 
-    # Kiểm tra tồn tại user_id và position
+    # Check user_id & position
     existing_position = UserSubscribe.query.filter_by(user_id=userID, position=position).first()
 
     if existing_position:
@@ -210,6 +194,30 @@ def subscribe():
 
     return jsonify({'message': 'Subscription successful', 'userID':userID}), 200
 
+@app.route('/unsubscribe', methods=['POST'])
+def unsubscribe():
+    data = request.json
+    position = data.get('position')
+    user_id = data.get('userID')
+
+    # Check user_id & position
+    if not position or not user_id:
+        return jsonify({"error": "Missing position or userID"}), 400
+
+    # Delete record in UserSubscribe
+    try:
+        subscription = UserSubscribe.query.filter_by(user_id=user_id, position=position).first()
+
+        if subscription:
+            db.session.delete(subscription)
+            db.session.commit()
+            return jsonify({"message": "Unsubscribed successfully"}), 200
+        else:
+            return jsonify({"error": "Subscription not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/google-login', methods=['POST'])
 def google_login():
     token = request.json.get('token')
@@ -220,23 +228,12 @@ def google_login():
 
         email = id_info.get('email')
 
-        # Tạo JWT
+        # Create JWT
         access_token = create_access_token(identity=email)
 
         return jsonify(access_token=access_token), 200
     except ValueError as e:
         return jsonify({'error': 'Invalid token'}), 401
-    
-@app.route('/test', methods=['POST'])
-@cross_origin()
-def test():
-    if request.is_json:
-        data = request.get_json()
-        # Xử lý dữ liệu của bạn ở đây
-        return jsonify({"message": "Data received"}), 200
-    else:
-        return jsonify({"error": "Request must be JSON"}), 415
-    
-
+   
 if __name__ == "__main__":
     app.run(debug=True)
