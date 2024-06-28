@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 from functools import wraps
@@ -157,28 +157,35 @@ def login():
 
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
-    data = request.json
-    position = data.get('position')
-    current = 'current.json'
-    forecast = 'forecast.json'
+    if request.is_json:
+        data = request.get_json()
+        position = data.get('position')
+        current = 'current.json'
+        forecast = 'forecast.json'
 
-    url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        weather_data = response.json()
-    else:
-        return jsonify({"error": "Could not retrieve data"}), 400
-
-    url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        forecast_data = response.json()
-    else:
-        return jsonify({"error": "Could not retrieve data"}), 400
+        # Get curr weather
+        url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
+        response = requests.get(url)
         
-    return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
+        if response.status_code == 200:
+            weather_data = response.json()
+        else:
+            return jsonify({"error": "Could not retrieve data"}), 400
+
+        # Get forecast weather
+        url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            forecast_data = response.json()
+        else:
+            return jsonify({"error": "Could not retrieve data"}), 400
+
+        # Return result            
+        return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
+    
+    else:
+        return jsonify({"error": "Request must be JSON"}), 415
 
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
@@ -219,6 +226,7 @@ def google_login():
         return jsonify({'error': 'Invalid token'}), 401
     
 @app.route('/test', methods=['POST'])
+@cross_origin()
 def test():
     if request.is_json:
         data = request.get_json()
