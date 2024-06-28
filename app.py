@@ -20,6 +20,7 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app) 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/GOS/GOS_Flask/instance/database.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -38,7 +39,6 @@ app.config['JWT_SECRET_KEY'] = '26432b2e093f44a8afb67de48f77fe6b'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
 jwt = JWTManager(app)
 
-CORS(app) 
 
 
 class User(db.Model):
@@ -217,5 +217,16 @@ def google_login():
         return jsonify(access_token=access_token), 200
     except ValueError as e:
         return jsonify({'error': 'Invalid token'}), 401
+    
+@app.route('/test', methods=['POST'])
+def submit_form():
+    if request.is_json:
+        data = request.get_json()
+        # Xử lý dữ liệu của bạn ở đây
+        return jsonify({"message": "Data received"}), 200
+    else:
+        return jsonify({"error": "Request must be JSON"}), 415
+    
+
 if __name__ == "__main__":
     app.run(debug=True)
