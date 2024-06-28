@@ -20,7 +20,7 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/GOS/GOS_Flask/instance/database.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -38,6 +38,8 @@ mail = Mail(app)
 app.config['JWT_SECRET_KEY'] = '26432b2e093f44a8afb67de48f77fe6b'  
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
 jwt = JWTManager(app)
+
+CORS(app) 
 
 
 
