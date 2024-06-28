@@ -60,19 +60,37 @@ class UserSubscribe(db.Model):
     position = db.Column(db.String(255), nullable=False)
 
     def __repr__(self):
-        return f'<UserPosition user_id={self.user_id} position={self.position}>'
+        return f'<UserSubscribe user_id={self.user_id} position={self.position}>'
     
+
+
+
+
+
+# def send_daily_email():
+#     with app.app_context():
+#         msg = Message("Daily Weather Update",
+#                       sender="tranngoctonhu2405@gmail.com",
+#                       recipients=["tranngoctonhu245@gmail.com"])
+#         msg.body = "Hey how are you? Here's your daily weather update!"
+#         mail.send(msg)
+
 def send_daily_email():
     with app.app_context():
-        msg = Message("Daily Weather Update",
-                      sender="tranngoctonhu2405@gmail.com",
-                      recipients=["tranngoctonhu245@gmail.com"])
-        msg.body = "Hey how are you? Here's your daily weather update!"
-        mail.send(msg)
+        users = User.query.all()
+        for user in users:
+            user_subscriptions = UserSubscribe.query.filter_by(user_id=user.id).all()
+            if user_subscriptions:
+                positions = ', '.join(sub.position for sub in user_subscriptions)
+                msg = Message("Daily Weather Update",
+                              sender="tranngoctonhu2405@gmail.com",
+                              recipients=[user.email])
+                msg.body = f"Hey how are you? Here's your daily weather update!\nYour subscribed positions: {positions}"
+                mail.send(msg)
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_daily_email, 'cron', hour=7, minute=0)
-# scheduler.add_job(send_daily_email, 'interval', seconds=10)
+# scheduler.add_job(send_daily_email, 'cron', hour=7, minute=0)
+scheduler.add_job(send_daily_email, 'interval', seconds=60)
 scheduler.start()
 
 def generate_otp(length=6):
