@@ -158,25 +158,25 @@ def login():
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
     data = request.json
-    city = data.get('city')
+    position = data.get('position')
     current = 'current.json'
     forecast = 'forecast.json'
 
-    url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={city}&aqi=no"
+    url = f"{cfg.BASE_URL}{current}?key={cfg.API_KEY}&q={position}&aqi=no"
     response = requests.get(url)
     
     if response.status_code == 200:
         weather_data = response.json()
     else:
-        weather_data = {"error": "Could not retrieve data"}
+        return jsonify({"error": "Could not retrieve data"}), 400
 
-    url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={city}&days=5&aqi=no&alerts=yes"
+    url = f"{cfg.BASE_URL}{forecast}?key={cfg.API_KEY}&q={position}&days=5&aqi=no&alerts=yes"
     response = requests.get(url)
     
     if response.status_code == 200:
         forecast_data = response.json()
     else:
-        forecast_data = {"error": "Could not retrieve data"}
+        return jsonify({"error": "Could not retrieve data"}), 400
         
     return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
 
