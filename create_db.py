@@ -1,5 +1,5 @@
-from app import app, db
+from app import main, db
 
-with app.app_context():
+with main.app_context():
     db.drop_all()
     db.create_all()
