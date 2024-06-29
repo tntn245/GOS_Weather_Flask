@@ -16,3 +16,4 @@ Flask-Login
 bcrypt
 flask-jwt-extended
 psycopg2-binary
+Flask-APScheduler

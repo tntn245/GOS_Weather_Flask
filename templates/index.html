@@ -4,68 +4,82 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('static', filename='css/index.css') }}"/>
-
   </head>
   <body>
-    <div>
-      <header class="header">Daily Weather</header>
-      <div class="content">
-        <div class="right-side">
-          <div class="info-container">
-            <div class="info-box">
-              <h3>
-                {{ weather_data['location']['country'] if weather_data else
-                "Country" }}
-              </h3>
-              <p>
-                Temperature: {{ weather_data['current']['temp_c'] if
-                weather_data else "---" }} &#8451;
-              </p>
-              <p>
-                Wind speed: {{ weather_data['current']['wind_kph'] if
-                weather_data else "---" }} KM/H
-              </p>
-              <p>
-                Humidity: {{ weather_data['current']['humidity'] if weather_data
-                else "---" }} %
-              </p>
-            </div>
-            <div class="additional-info">
-              <p>
-                {{ weather_data['current']['condition']['text'] if weather_data
-                else "No data" }}
-              </p>
-            </div>
-          </div>
-
-          <div class="days-label">4 Day Forecast</div>
-          <div class="four-columns">
-            {% if forecast_data and forecast_data.forecast.forecastday %} 
-            {% for day in forecast_data.forecast.forecastday[1:] %}
-            <div class="forecast-day">
-              <div class="column-box">
-                <h4>( {{ day.date }} )</h4>
-                <p>{{ day.day.condition.text }}</p>
-                <p>Temp: {{ day.day.avgtemp_c }} &#8451;</p>
-                <p>Max Wind: {{ day.day.maxwind_kph }} KM/H</p>
-                <p>Humidity: {{ day.day.avghumidity }} %</p>
+    <div style="margin: 0; font-family: Arial, sans-serif; background-color: white;">
+      <div class="dashboard" style="display: grid; grid-template-rows: auto 1fr; height: 100vh;">
+        <div class="content" style="display: flex; flex-direction: column; gap: 10px; padding: 15px; height: 90%;">
+          <div class="right-side" style="padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+            <div class="info-container" style="background-color: #5AB2FF; color: black; padding: 10px; border-radius: 4px; display: flex; flex-direction: row; gap: 10px; height: 150px;">
+              <div class="info-box" style="color: black; padding: 10px; border-radius: 4px; margin: 0;">
+                <h3 style="margin: 0;">
+                  {% if weather_data %}
+                    {{ weather_data['location']['country'] }}
+                  {% else %}
+                    Country
+                  {% endif %}
+                </h3>
+                <p>
+                  Temperature: 
+                  {% if weather_data %}
+                    {{ weather_data['current']['temp_c'] }} &#8451;
+                  {% else %}
+                    ---
+                  {% endif %}
+                </p>
+                <p>
+                  Wind speed: 
+                  {% if weather_data %}
+                    {{ weather_data['current']['wind_kph'] }} KM/H
+                  {% else %}
+                    ---
+                  {% endif %}
+                </p>
+                <p>
+                  Humidity: 
+                  {% if weather_data %}
+                    {{ weather_data['current']['humidity'] }} %
+                  {% else %}
+                    ---
+                  {% endif %}
+                </p>
+              </div>
+              <div class="additional-info" style="color: black; border-radius: 4px; flex: 3; display: flex; align-items: center; justify-content: center; text-align: center;">
+                <p>
+                  {% if weather_data %}
+                    {{ weather_data['current']['condition']['text'] }}
+                  {% else %}
+                    No data
+                  {% endif %}
+                </p>
               </div>
             </div>
-            {% endfor %} 
-            {% else %}
-            {% for i in range(4) %}
-              <div class="forecast-day">
-                <div class="column-box">
-                  <h4>---</h4>
-                  <p>No forecast data available.</p>
-                </div>
-              </div>
-            {% endfor %}
-            {% endif %}
+    
+            <div class="days-label" style="text-align: center; font-size: 20px; margin: 10px 0; font-weight: bold; text-align: left;">4 Day Forecast</div>
+            <div class="four-columns">
+              {% if forecast_data and forecast_data.forecast.forecastday %}
+                {% for day in forecast_data.forecast.forecastday[1:] %}
+                  <div class="forecast-day" style="display: flex; flex-direction: row; gap: 10px;">
+                    <div class="column-box" style="color: black; background-color: #A0DEFF; border-radius: 4px; padding: 10px; margin: 15px 0;">
+                      <h4>( {{ day.date }} )</h4>
+                      <p>{{ day.day.condition.text }}</p>
+                      <p>Temp: {{ day.day.avgtemp_c }} &#8451;</p>
+                      <p>Max Wind: {{ day.day.maxwind_kph }} KM/H</p>
+                      <p>Humidity: {{ day.day.avghumidity }} %</p>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                {% for i in range(4) %}
+                  <div class="forecast-day" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="column-box" style="color: black; background-color: #DFF5FF; border-radius: 4px; padding: 10px; margin: 15px 0;">
+                      <h4>---</h4>
+                      <p>No forecast data available.</p>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
