@@ -53,8 +53,8 @@ def send_daily_email():
                 mail.send(msg)
                 
 scheduler = BackgroundScheduler()
-# scheduler.add_job(send_daily_email, 'cron', hour=16, minute=38)
-scheduler.add_job(send_daily_email, 'interval', seconds=60)
+scheduler.add_job(send_daily_email, 'cron', hour=23, minute=54)
+# scheduler.add_job(send_daily_email, 'interval', seconds=60)
 scheduler.start()
 
 
