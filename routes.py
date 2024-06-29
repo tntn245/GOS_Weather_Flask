@@ -1,14 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, current_app
-from flask_mail import Mail, Message
-from apscheduler.schedulers.background import BackgroundScheduler
-from dotenv import load_dotenv
+from flask_mail import Message
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from flask_cors import CORS, cross_origin
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
-from functools import wraps
+from flask_jwt_extended import create_access_token
 from model import db, User, UserSubscribe
 from helper import generate_otp
 
@@ -35,7 +29,7 @@ def checkEmail():
         return jsonify({'message': 'Email already exists!'}), 400
 
     otp = generate_otp()
-    msg = Message('Your OTP Code', sender='tranngoctonhu2405@gmail.com', recipients=[email])
+    msg = Message('Your OTP Code', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
     msg.body = f'Your OTP code is {otp}'
     mail = current_app.config['mail']
     mail.send(msg)

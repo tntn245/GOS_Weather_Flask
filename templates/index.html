@@ -7,29 +7,13 @@
     <link
       rel="stylesheet"
       type="text/css"
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
-    />
+      href="{{ url_for('static', filename='css/index.css') }}"/>
 
   </head>
   <body>
     <div>
-      <header class="header">Weather Dashboard</header>
+      <header class="header">Daily Weather</header>
       <div class="content">
-        <div class="left-side">
-          <div class="input-container">
-            <p>Enter a City Name</p>
-              <input type="text" id="city" name="city" required /><br /><br />
-              <input type="submit" value="Search" />
-          </div>
-          <div class="divider">
-            <span class="divider-text">or</span>
-          </div>
-          <button class="curr-button" onclick="getLocation()">
-            Use current location
-          </button>
-          <p id="curr-location-alert"></p>
-        </div>
-
         <div class="right-side">
           <div class="info-container">
             <div class="info-box">
@@ -53,15 +37,15 @@
             <div class="additional-info">
               <p>
                 {{ weather_data['current']['condition']['text'] if weather_data
-                else "Additional Information" }}
+                else "No data" }}
               </p>
             </div>
           </div>
 
           <div class="days-label">4 Day Forecast</div>
           <div class="four-columns">
-            {% if forecast_data and forecast_data.forecast.forecastday %} {% for
-            day in forecast_data.forecast.forecastday[1:] %}
+            {% if forecast_data and forecast_data.forecast.forecastday %} 
+            {% for day in forecast_data.forecast.forecastday[1:] %}
             <div class="forecast-day">
               <div class="column-box">
                 <h4>( {{ day.date }} )</h4>
@@ -71,7 +55,17 @@
                 <p>Humidity: {{ day.day.avghumidity }} %</p>
               </div>
             </div>
-            {% endfor %} {% endif %}
+            {% endfor %} 
+            {% else %}
+            {% for i in range(4) %}
+              <div class="forecast-day">
+                <div class="column-box">
+                  <h4>---</h4>
+                  <p>No forecast data available.</p>
+                </div>
+              </div>
+            {% endfor %}
+            {% endif %}
           </div>
         </div>
       </div>
