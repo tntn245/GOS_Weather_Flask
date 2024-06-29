@@ -6,33 +6,33 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
 from model import db, User, UserSubscribe
-from routes import app
+from routes import app_route
 from helper import send_daily_email
 import os
 
 load_dotenv()
 
-main = Flask(__name__)
+app = Flask(__name__)
 
-main.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-main.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-main.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-db.init_app(main)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+db.init_app(app)
 
-main.config['MAIL_SERVER'] = 'smtp.gmail.com'
-main.config['MAIL_PORT'] = 465
-main.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-main.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-main.config['MAIL_USE_TLS'] = False
-main.config['MAIL_USE_SSL'] = True
-mail = Mail(main)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
 
-main.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-main.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
-jwt = JWTManager(main)
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
+jwt = JWTManager(app)
 
 def send_daily_email():
-    with main.app_context():
+    with app.app_context():
         users = User.query.all()
         for user in users:
             user_subscriptions = UserSubscribe.query.filter_by(user_id=user.id).all()
@@ -50,9 +50,9 @@ scheduler.add_job(send_daily_email, 'cron', hour=12, minute=0)
 scheduler.start()
 
 
-CORS(main) 
+CORS(app) 
     
-main.register_blueprint(app)
+app.register_blueprint(app_route)
 
 if __name__ == "__main__":
-    main.run(debug=True)
+    app.run(debug=True)

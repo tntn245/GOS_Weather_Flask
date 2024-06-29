@@ -15,14 +15,14 @@ from helper import generate_otp
 import requests
 import os
 
-app = Blueprint('app', __name__)
+app_route = Blueprint('app', __name__)
 
-@app.route('/')
+@app_route.route('/')
 def index():
     weather_data = request.args.get('weather_data')
     return render_template("index.html", weather_data=weather_data)
 
-@app.route('/checkEmail', methods=['POST'])
+@app_route.route('/checkEmail', methods=['POST'])
 def checkEmail():
     data = request.get_json()
     email = data.get('email')
@@ -43,7 +43,7 @@ def checkEmail():
     return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
 
 
-@app.route('/verifyOTP', methods=['POST'])
+@app_route.route('/verifyOTP', methods=['POST'])
 def register():
     data = request.get_json()
     email = data.get('email')
@@ -60,7 +60,7 @@ def register():
     
     return jsonify({'message': 'Verify failed!'}), 400
 
-@app.route('/login', methods=['POST'])
+@app_route.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -76,7 +76,7 @@ def login():
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
 
 
-@app.route('/submit_form', methods=['POST'])
+@app_route.route('/submit_form', methods=['POST'])
 def submit_form():
     data = request.json
     position = data.get('position')
@@ -105,7 +105,7 @@ def submit_form():
     return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
     
 
-@app.route('/subscribe', methods=['POST'])
+@app_route.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.json
     position = data.get('position')
@@ -126,7 +126,7 @@ def subscribe():
 
     return jsonify({'message': 'Subscription successful', 'userID':userID}), 200
 
-@app.route('/loadUserSub', methods=['POST'])
+@app_route.route('/loadUserSub', methods=['POST'])
 def load_user_subscriptions():
     data = request.get_json()
     userID = data.get('userID')
@@ -139,7 +139,7 @@ def load_user_subscriptions():
 
     return jsonify({'positions': positions}), 200
 
-@app.route('/unsubscribe', methods=['POST'])
+@app_route.route('/unsubscribe', methods=['POST'])
 def unsubscribe():
     data = request.json
     position = data.get('position')
@@ -163,7 +163,7 @@ def unsubscribe():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/google-login', methods=['POST'])
+@app_route.route('/google-login', methods=['POST'])
 def google_login():
     token = request.json.get('token')
     try:
