@@ -1,7 +1,6 @@
 from flask import Flask, render_template
 from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask_apscheduler import APScheduler
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
@@ -14,7 +13,6 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-scheduler = APScheduler()
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -34,7 +32,6 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 jwt = JWTManager(app)
 
 def send_daily_email():
-    print("a")
     with app.app_context():
         users = User.query.all()
         for user in users:
@@ -42,7 +39,7 @@ def send_daily_email():
             if user_subscriptions:
                 positions = ', '.join(sub.position for sub in user_subscriptions)
                 msg = Message(f"Daily Weather in {positions}",
-                              sender= 'tranngoctonhu2405@gmail.com',
+                              sender= os.getenv('MAIL_USERNAME'),
                               recipients=[user.email])
                 msg.body = f"Hey how are you? Here's your daily weather update!\nYour subscribed positions: {positions}"
 
@@ -55,13 +52,15 @@ def send_daily_email():
 
                 mail.send(msg)
                 
+scheduler = BackgroundScheduler()
+# scheduler.add_job(send_daily_email, 'cron', hour=16, minute=38)
+scheduler.add_job(send_daily_email, 'interval', seconds=60)
+scheduler.start()
+
 
 CORS(app) 
     
 app.register_blueprint(app_route)
 
 if __name__ == "__main__":
-    # scheduler.add_job(func=send_daily_email, trigger='cron', hour=22, minute=23)
-    scheduler.add_job(func=send_daily_email, trigger='interval', seconds=60, id='sendemail')
-    scheduler.start()
-    app.run(debug=False)
+    app.run(debug=True)
