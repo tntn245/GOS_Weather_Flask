@@ -53,3 +53,6 @@ scheduler.start()
 CORS(main) 
     
 main.register_blueprint(app)
+
+if __name__ == "__main__":
+    main.run(debug=True)
