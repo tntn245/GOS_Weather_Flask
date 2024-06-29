@@ -10,36 +10,6 @@
       href="{{ url_for('static', filename='css/dashboard.css') }}"
     />
 
-    <script>
-      function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(showPosition);
-        } else {
-          document.getElementById("curr-location-alert").innerHTML =
-            "Geolocation is not supported by this browser.";
-        }
-      }
-
-      function showPosition(position) {
-        const position =
-          position.coords.latitude + "," + position.coords.longitude;
-
-        fetch("/submit_form", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ position: position }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Response from Flask:", data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      }
-    </script>
   </head>
   <body>
     <div>
@@ -48,10 +18,8 @@
         <div class="left-side">
           <div class="input-container">
             <p>Enter a City Name</p>
-            <form action="{{ url_for('submit_form') }}" method="POST">
               <input type="text" id="city" name="city" required /><br /><br />
               <input type="submit" value="Search" />
-            </form>
           </div>
           <div class="divider">
             <span class="divider-text">or</span>
