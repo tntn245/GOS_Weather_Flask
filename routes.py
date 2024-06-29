@@ -180,6 +180,3 @@ def google_login():
     except ValueError as e:
         return jsonify({'error': 'Invalid token'}), 401
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
