@@ -37,24 +37,29 @@ def send_daily_email():
         for user in users:
             user_subscriptions = UserSubscribe.query.filter_by(user_id=user.id).all()
             if user_subscriptions:
-                positions = ', '.join(sub.position for sub in user_subscriptions)
-                msg = Message(f"Daily Weather in {positions}",
-                              sender= os.getenv('MAIL_USERNAME'),
-                              recipients=[user.email])
-                msg.body = f"Hey how are you? Here's your daily weather update!\nYour subscribed positions: {positions}"
+                for sub in user_subscriptions:
+                    pos = sub.position
+                    weather_data = getCurrWeather(pos) 
+                    forecast_data = getForecastWeather(pos)
 
-                data = {
-                    'header': 'Current weather',
-                    'weather_data' : getCurrWeather(positions),
-                    'forecast_data': getForecastWeather(positions)
-                }
-                msg.html = render_template("index.html", data=data)
+                    if weather_data != "Error" and forecast_data != "Error":
+                        msg = Message(f"Daily Weather in {pos}",
+                                    sender= os.getenv('MAIL_USERNAME'),
+                                    recipients=[user.email])
+                        msg.body = f"Hey how are you? Here's your daily weather update!\nYour subscribed positions: {pos}"
 
-                mail.send(msg)
+                        data = {
+                            'header': 'Current weather',
+                            'weather_data' : weather_data,
+                            'forecast_data': forecast_data
+                        }
+                        msg.html = render_template("index.html", data=data)
+
+                        mail.send(msg)
                 
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_daily_email, 'cron', hour=0, minute=7)
-# scheduler.add_job(send_daily_email, 'interval', seconds=60)
+# scheduler.add_job(send_daily_email, 'cron', hour=11, minute=33)
+scheduler.add_job(send_daily_email, 'interval', seconds=60*3)
 scheduler.start()
 
 
