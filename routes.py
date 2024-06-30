@@ -14,7 +14,7 @@ app_route = Blueprint('app', __name__)
 @app_route.route('/')
 def index():
     weather_data = request.args.get('weather_data')
-    return render_template("index.html", weather_data=weather_data)
+    return render_template("index.html", data=weather_data)
 
 @app_route.route('/checkEmail', methods=['POST'])
 def checkEmail():
