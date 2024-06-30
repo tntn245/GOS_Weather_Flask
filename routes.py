@@ -66,9 +66,8 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=user.email)
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
-
 
 @app_route.route('/submit_form', methods=['POST'])
 def submit_form():
@@ -159,18 +158,22 @@ def unsubscribe():
 
 @app_route.route('/google-login', methods=['POST'])
 def google_login():
-    token = request.json.get('token')
-    try:
-        id_info = id_token.verify_oauth2_token(token, google_requests.Request())
-        if id_info['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-            raise ValueError('Wrong issuer.')
+    data = request.get_json()
+    credential = data.get('obj')
+    email = data.get('email')
 
-        email = id_info.get('email')
+    if credential:
+        # Check email existed
+        user = User.query.filter_by(email=email).first()
 
-        # Create JWT
-        access_token = create_access_token(identity=email)
-
-        return jsonify(access_token=access_token), 200
-    except ValueError as e:
-        return jsonify({'error': 'Invalid token'}), 401
-
+        if not user:
+            new_user = User(email=email)
+            new_user.set_password('')
+            db.session.add(new_user)
+            db.session.commit()
+        
+        access_token = create_access_token(identity=user.email)
+        return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
+    
+    return jsonify({"error": "Could not retrieve email"}), 400
+    
