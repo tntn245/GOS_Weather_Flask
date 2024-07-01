@@ -9,6 +9,7 @@ from model import db, User, UserSubscribe
 from routes import app_route
 from flask import Blueprint, render_template, request, jsonify, current_app
 from helper import getCurrWeather, getForecastWeather,  generate_otp
+from extension import mail
 import os
 
 load_dotenv()
@@ -26,7 +27,7 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-mail = Mail(app)
+mail.init_app(app)
 
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
@@ -65,26 +66,6 @@ scheduler.start()
 
 
 CORS(app) 
-
-# test for deployment
-@app.route('/checkEmail', methods=['POST'])
-def checkEmail():
-    data = request.get_json()
-    email = data.get('email')
-
-    if not email:
-        return jsonify({'message': 'Email is required!'}), 400
-
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({'message': 'Email already exists!'}), 400
-
-    otp = generate_otp()
-    msg = Message('Your OTP Code', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
-    msg.body = f'Your OTP code is {otp}'
-    mail.send(msg)
-
-    return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
 
 app.register_blueprint(app_route)
 
