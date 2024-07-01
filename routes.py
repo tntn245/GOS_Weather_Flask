@@ -16,25 +16,25 @@ def index():
     weather_data = request.args.get('weather_data')
     return render_template("index.html", data=weather_data)
 
-@app_route.route('/checkEmail', methods=['POST'])
-def checkEmail():
-    data = request.get_json()
-    email = data.get('email')
+# @app_route.route('/checkEmail', methods=['POST'])
+# def checkEmail():
+#     data = request.get_json()
+#     email = data.get('email')
 
-    if not email:
-        return jsonify({'message': 'Email is required!'}), 400
+#     if not email:
+#         return jsonify({'message': 'Email is required!'}), 400
 
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({'message': 'Email already exists!'}), 400
+#     existing_user = User.query.filter_by(email=email).first()
+#     if existing_user:
+#         return jsonify({'message': 'Email already exists!'}), 400
 
-    otp = generate_otp()
-    msg = Message('Your OTP Code', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
-    msg.body = f'Your OTP code is {otp}'
-    mail = current_app.config['mail']
-    mail.send(msg)
+#     otp = generate_otp()
+#     msg = Message('Your OTP Code', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
+#     msg.body = f'Your OTP code is {otp}'
+#     mail = current_app.config['mail']
+#     mail.send(msg)
 
-    return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
+#     return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
 
 
 @app_route.route('/verifyOTP', methods=['POST'])

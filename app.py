@@ -7,7 +7,8 @@ from flask_cors import CORS
 from datetime import timedelta
 from model import db, User, UserSubscribe
 from routes import app_route
-from helper import getCurrWeather, getForecastWeather
+from flask import Blueprint, render_template, request, jsonify, current_app
+from helper import getCurrWeather, getForecastWeather,  generate_otp
 import os
 
 load_dotenv()
@@ -64,7 +65,27 @@ scheduler.start()
 
 
 CORS(app) 
-    
+
+# test for deployment
+@app.route('/checkEmail', methods=['POST'])
+def checkEmail():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'message': 'Email is required!'}), 400
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'message': 'Email already exists!'}), 400
+
+    otp = generate_otp()
+    msg = Message('Your OTP Code', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
+    msg.body = f'Your OTP code is {otp}'
+    mail.send(msg)
+
+    return jsonify({'message': 'OTP sent to your email!', 'otp': otp})
+
 app.register_blueprint(app_route)
 
 if __name__ == "__main__":
