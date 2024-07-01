@@ -66,7 +66,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    access_token = create_access_token(identity=user.email)
+    access_token = create_access_token(identity=user.id)
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
 
 @app_route.route('/submit_form', methods=['POST'])
@@ -97,6 +97,20 @@ def submit_form():
     # Return result            
     return jsonify({"weather_data": weather_data, "forecast_data": forecast_data})
     
+@app_route.route('/getID', methods=['POST'])
+def getID():
+    data = request.json
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'message': 'Email is required'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    return jsonify({'id': user.id}), 200
 
 @app_route.route('/subscribe', methods=['POST'])
 def subscribe():
