@@ -4,7 +4,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from flask_jwt_extended import create_access_token
 from model import db, User, UserSubscribe
-from helper import generate_otp
+from helper import generate_otp, getCurrWeather, getForecastWeather
 from extension import mail
 
 import requests
@@ -125,7 +125,7 @@ def subscribe():
     existing_position = UserSubscribe.query.filter_by(user_id=userID, position=position).first()
 
     if existing_position:
-        return jsonify({'message': 'Position already subscribed'}), 400
+        return jsonify({'message': 'Position already subscribed'}), 200
 
     new_position = UserSubscribe(user_id=userID, position=position)
     db.session.add(new_position)
@@ -169,7 +169,38 @@ def unsubscribe():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app_route.route('/sendemail', methods=['POST'])
+def sendemail():
+    data = request.json
+    position = data.get('position')
+    userID = data.get('userID')
 
+    user = User.query.filter_by(id=userID).first()
+    if user:
+        weather_data = getCurrWeather(position) 
+        forecast_data = getForecastWeather(position)
+
+        if weather_data != "Error" and forecast_data != "Error":
+            msg = Message(f"Daily Weather in {position}",
+                        sender= os.getenv('MAIL_USERNAME'),
+                        recipients=[user.email])
+            msg.body = f"Hey how are you? Here's your daily weather update!\nYour subscribed positions: {position}"
+
+            data = {
+                'header': 'Current weather',
+                'weather_data' : weather_data,
+                'forecast_data': forecast_data
+            }
+            msg.html = render_template("index.html", data=data)
+
+            current_app.extensions['mail'].send(msg)
+            return jsonify({'message': 'Send email successful'}), 200
+
+        return jsonify({'message': 'Error fetch weather data'}), 400
+    
+    return jsonify({'message': 'Error request'}), 400
+    
 @app_route.route('/google-login', methods=['POST'])
 def google_login():
     data = request.get_json()
